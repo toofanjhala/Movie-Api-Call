@@ -6,14 +6,15 @@ import './App.css';
 function App() {
   const [movies,setmovies]=useState([])
 
-  function fetchingdatahandler(){
-    fetch("https://swapi.py4e.com/api/films/").then(res=>{
-      return res.json()
-     })
-     .then((data)=>{
-      setmovies(data.results)
+  async function fetchingdatahandler(){
     
-     })
+     const response= await  fetch("https://swapi.py4e.com/api/films/")
+     const convertedresponse = await response.json()
+     const moviesarray= await convertedresponse.results
+     
+      setmovies(moviesarray)
+    
+     
 }
 
   return (
