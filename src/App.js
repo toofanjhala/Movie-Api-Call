@@ -1,82 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import MoviesList from './components/MoviesList';
+import AddMovie from './components/AddMovie';
 import './App.css';
 
 function App() {
-  const [movies, setmovies] = useState([])
-  const [isloading, setisloading] = useState(false)
-  const [error, seterror] = useState(null)
-  const [intervalId, setIntervalId] = useState(0);
+  const [movies, setMovies] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-
-
-  async function fetchingdatahandler() {
-    seterror(null)
-    setisloading(true)
-
-  const interval = setInterval(async () => {
-
-      try {
-        const response = await fetch("https://swapi.py4e.com/api/film/")
-
-        if (response.status !== 200) {
-          throw new Error("something went wrong retrying...")
-        }
-
-
-        const convertedresponse = await response.json()
-        const moviesarray = await convertedresponse.results
-        setisloading(false)
-        setmovies(moviesarray)
-      } catch (Error) {
-        seterror(Error.message)
-
+  const fetchMoviesHandler = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('https://swapi.dev/api/films/');
+      if (!response.ok) {
+        throw new Error('Something went wrong!');
       }
-    }, 5000);
-    setIntervalId(interval)
 
+      const data = await response.json();
 
+      const transformedMovies = data.results.map((movieData) => {
+        return {
+          id: movieData.episode_id,
+          title: movieData.title,
+          openingText: movieData.opening_crawl,
+          releaseDate: movieData.release_date,
+        };
+      });
+      setMovies(transformedMovies);
+    } catch (error) {
+      setError(error.message);
+    }
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchMoviesHandler();
+  }, [fetchMoviesHandler]);
+
+  function addMovieHandler(movie) {
+    console.log(movie);
   }
 
-  function stophandler(){
-clearInterval(intervalId)
-  setIntervalId(111)
-  }
+  let content = <p>Found no movies.</p>;
 
-
-console.log("out",intervalId)
-
-  let content = <p> NO movie Available</p>
-
-  if (isloading === true) {
-    content = <p> loading...</p>
-
+  if (movies.length > 0) {
+    content = <MoviesList movies={movies} />;
   }
 
   if (error) {
-    content = <div><button onClick={stophandler}>Cancel</button> <p>{error}</p></div>
+    content = <p>{error}</p>;
   }
 
-
-  if(intervalId===111)
-  {
-    content= <p> sorry , no item found</p>
+  if (isLoading) {
+    content = <p>Loading...</p>;
   }
-  if (movies.length > 0) {
-    content = <MoviesList movies={movies} />
-  }
-
-
 
   return (
     <React.Fragment>
       <section>
-        <button onClick={fetchingdatahandler}>Fetch Movies</button>
+        <AddMovie onAddMovie={addMovieHandler} />
       </section>
       <section>
-        {content}
+        <button onClick={fetchMoviesHandler}>Fetch Movies</button>
       </section>
+      <section>{content}</section>
     </React.Fragment>
   );
 }
