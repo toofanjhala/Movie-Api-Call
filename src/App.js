@@ -4,6 +4,7 @@ import MoviesList from './components/MoviesList';
 import AddMovie from './components/AddMovie';
 import './App.css';
 
+
 function App() {
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -13,22 +14,24 @@ function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('https://swapi.dev/api/films/');
+      const response = await fetch('https://react-firstdummy-default-rtdb.firebaseio.com/movies.json');
       if (!response.ok) {
         throw new Error('Something went wrong!');
       }
-
       const data = await response.json();
+      const loadeddata=[]
 
-      const transformedMovies = data.results.map((movieData) => {
-        return {
-          id: movieData.episode_id,
-          title: movieData.title,
-          openingText: movieData.opening_crawl,
-          releaseDate: movieData.release_date,
-        };
-      });
-      setMovies(transformedMovies);
+      for ( let key in data){
+        loadeddata.push({
+          id:key,
+          title:data[key].title,
+          openingText:data[key].openingText,
+          releaseDate: data[key].releaseDate,
+        })
+      }
+
+   
+      setMovies(loadeddata);
     } catch (error) {
       setError(error.message);
     }
@@ -39,14 +42,34 @@ function App() {
     fetchMoviesHandler();
   }, [fetchMoviesHandler]);
 
-  function addMovieHandler(movie) {
-    console.log(movie);
+ async function addMovieHandler(movie) {
+    const data= await fetch("https://react-firstdummy-default-rtdb.firebaseio.com/movies.json",{
+      method:"POST",
+      body: JSON.stringify(movie),
+      headers:{
+        "Content-Type": "application/json"
+      }
+    })
+      console.log(data)
   }
+
+  async function DELMOVIEHANDLER(id){
+   const data= await fetch(`https://react-firstdummy-default-rtdb.firebaseio.com/movies.json/${id}`,
+   {
+   method: 'DELETE', // Method itself
+   headers: {
+    'Content-type': 'application/json; charset=UTF-8' // Indicates the content 
+   },
+  
+ })
+
+ console.log(data)
+}
 
   let content = <p>Found no movies.</p>;
 
   if (movies.length > 0) {
-    content = <MoviesList movies={movies} />;
+    content = <MoviesList movies={movies} onDEL={DELMOVIEHANDLER}/>;
   }
 
   if (error) {
